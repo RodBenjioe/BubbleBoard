@@ -2,7 +2,7 @@
 
 # Overview (Current Implementation)
 
-BubbleBoard is a web-based social media analytics dashboard. At the current stage of development, the core web infrastructure has been successfully deployed using AWS services. The app is accessible through a custom domain over HTTPS served through a CloudFront distribution backed by an S3 static website bucket, and uses AWS Cognito for user authentication. Users can access through the site, authenticate through Cognito, and be redirected back to the application. This established the foundation for secure frontend delivery and identity management prior to implementing backend data services and analytics features.
+BubbleBoard is a web-based social media analytics dashboard. It has changed from a static placeholder website with authentication to a fully functional frontend application deployed using Vue.js and integrated with a working backend API. The system now has login and logout functionality via AWS Cognito, a deployed Lambda function exposed through API Gateway, and dynamic data rendering on the dashboard page. Due to access limitations with the Reddit API, the external data source was replaced with RandomNumberAPI as a functional backend integration proof-of-concept. The system now shows complete end-to-end flow from authenticated user to backend API to dashboard display.
 
 # Implemented Components
 
@@ -47,11 +47,21 @@ BubbleBoard is a web-based social media analytics dashboard. At the current stag
 
 High-level Flow:
 
-User → Route 53 (DNS) → CloudFront (HTTPS) → S3 (Static Site)
-
-  ↓
-
-  AWS Cognito (Auth)
+User  
+↓  
+Route 53  
+↓  
+CloudFront (HTTPS)  
+↓  
+S3 (Vue Build Output)  
+↓  
+Vue Frontend  
+↓  
+API Gateway  
+↓  
+Lambda  
+↓  
+RandomNumberAPI
 
 ### Components used:
 
@@ -65,15 +75,24 @@ AWS Certificate Manager (ACM): TLS certificate for custom domain
 
 AWS Cognito: User authentication (hosted UI)
 
-Frontend: Static HTML (placeholder for future Vue build)
+Vue Frontend
+
+API Gateway
+
+Lambda
+
+External API
 
 ## Current Frontend State
 
-- Frontend is still using **static HTML** (placeholder UI)
-- Deployed through S3 + CloudFront
-- Login button redirects to Cognito Hosted UI
-- After login, user is redirected back to the site
-- No Vue build deployed yet (planned next step)
+- Vue project initialized
+- Static HTML replaced with Vue build output
+- Vue app successfully deployed to S3
+- CloudFront cache invalidated
+- Dashboard page renders dynamically
+- Login + Logout fully functional
+- API call made from Dashboard page
+- Random number rendered successfully
 
 ## Security Posture (Current)
 
@@ -116,6 +135,49 @@ Frontend: Static HTML (placeholder for future Vue build)
     - Successful redirect back to site
 - Decision made to **not touch working auth** until the Vue frontend is in place
 
+### Vue Deployment Issues
+
+- Needed to replace static HTML with Vue build output
+- Correct folder structure required in S3
+- CloudFront cache invalidation necessary
+
+### CORS Errors
+
+- API Gateway initially blocked frontend requests
+- Required enabling CORS headers
+
+### API Endpoint URL Issues
+
+- Incorrect endpoint used initially
+- Updated to correct production endpoint
+
+### Decision to Scrap Reddit API
+
+- Application approval not granted
+- Delayed progress
+- Strategic pivot to RandomNumberAPI to maintain project momentum
+
+## Backend API Implementation
+
+### Lambda
+
+- Created Lambda function
+- Performs external API call to RandomNumberAPI
+- Returns JSON response
+
+### API Gateway
+
+- REST endpoint created
+- Integrated with Lambda
+- CORS configured
+- Successfully invoked from frontend
+
+### External API Adjustment
+
+- Reddit API removed due to access restrictions
+- Replaced with RandomNumberAPI as proof-of-concept
+- Confirms end-to-end data flow
+
 ## Validation Evidence
 
 1.  Route 53:
@@ -154,27 +216,25 @@ Frontend: Static HTML (placeholder for future Vue build)
 
 - - Successful redirect back to your site after login
 
+- - Dashboard showing random number
+
+- - Vue app running over HTTPS
+
 ## What’s Not Implemented Yet (By Design)
 
-- Vue frontend build and deployment
-- Backend APIs (Lambda + API Gateway)
 - Database (DynamoDB/RDS)
-- Reddit API integration
 - Analytics pipeline
 - Tableau/Power BI embedding
 - CI/CD pipeline
 
 ## Next Development Steps
 
-1.  Initialize Vue project
-2.  Replace static HTML with Vue build output
-3.  Re-deploy Vue build to S3 + CloudFront
-4.  Integrate Cognito auth into Vue app properly
-5.  Add logout handling
-6.  Begin backend API (Lambda + API Gateway)
-7.  Connect Reddit API
-8.  Decide and implement data storage
-9.  Start building analytics views
+1.  Implement persistent data storage (DynamoDB)
+2.  Replace RandomNumberAPI with real data source
+3.  Improve dashboard UI/UX
+4.  Add error handling
+5.  Begin analytics visualization layer
+6.  Implement CI/CD Pipeline
 
 ## Current Milestone Summary
 
