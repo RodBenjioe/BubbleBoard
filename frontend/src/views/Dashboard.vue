@@ -1,114 +1,123 @@
 <template>
-    <div>
-        <h1>Dashboard</h1>
+<div>
+    <h1>Dashboard</h1>
 
-    <div>
-        <label>
-            Min:
-            <input type="number" v-model.number="min" />
-        </label>
+    <div style="margin-bottom: 20px;">
+        <label>Min:</label>
+        <input v-model="min" type="number" />
 
-        <label>
-            Max:
-            <input type="number" v-model.number="max" />
-        </label>
+        <label>Max:</label>
+        <input v-model="max" type="number" />
 
-        <label>
-            Count:
-            <input type="number" v-model.number="count"/>
-        </label>
+        <label>Count:</label>
+        <input v-model="count" type="number" />
 
-        <button @click="getNumbers" :disabled="loading">
-            {{ loading ? "Generating..." : "Generate" }}
-        </button>
+        <button @click="generateNumbers">Generate</button>
     </div>
 
     <div v-if="numbers.length">
-        <h2>Results</h2>
-        <p>{{ numbers.join(", ") }}</p>
-
-        <h3>Stats</h3>
-        <p>Min: {{ stats.min }}</p>
-        <p>Max: {{ stats.max }}</p>
-        <p>Average: {{ stats.avg.toFixed(2) }}</p>
+        <h3>Generated Numbers:</h3>
+        <pre>{{ numbers }}</pre>
     </div>
 
-        <p v-if="error" style="color: red">{{ error }}</p>
+    <hr />
+
+    <div v-if="history.length">
+        <h3>Your Last Runs</h3>
+        <div v-for="run in history" :key="run.createdAt" style="margin-bottom: 10px;">
+        <strong>{{ run.createdAt }}</strong><br />
+        Range: {{ run.min }} - {{ run.max }} | Count: {{ run.count }}<br />
+        Numbers: {{ run.numbers }}
+        </div>
     </div>
+</div>
 </template>
 
 <script>
+import { fetchAuthSession } from "aws-amplify/auth";
+
 export default {
-    data() {
-        return {
-            min: 0,
-            max: 100,
-            count: 5,
+data() {
+    return {
+        min: 0,
+        max: 100,
+        count: 5,
+        numbers: [],
+        history: [],
+        apiBase: "https://g1fy1zpjo2.execute-api.us-west-2.amazonaws.com/prod"
+    };
+},
 
-            numbers: [],
-            error: null,
-            loading: false,
+async mounted() {
+    await this.loadHistory();
+},
 
-            // API gateway base
-            apiBase: "https://g1fy1zpjo2.execute-api.us-west-2.amazonaws.com/prod"
-        };
+methods: {
+    async getAccessToken() {
+        const session = await fetchAuthSession();
+        return session.tokens?.accessToken?.toString();
     },
-    computed: {
-        stats() {
-            if (!this.numbers.length) return { min: 0, max: 0, avg: 0}
-            const min = Math.min(...this.numbers)
-            const max = Math.max(...this.numbers)
-            const avg =
-                this.numbers.reduce((a, b) => a + b, 0) / this.numbers.length
-            return { min, max, avg };
+
+    async generateNumbers() {
+        try {
+        const token = await this.getAccessToken();
+
+        // 1️⃣ Call /random
+        const response = await fetch(
+            `${this.apiBase}/random?min=${this.min}&max=${this.max}&count=${this.count}`,
+            {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }
+    );
+
+        if (!response.ok) throw new Error("Random API failed");
+
+        this.numbers = await response.json();
+
+        // 2️⃣ Save run to DynamoDB
+        await fetch(`${this.apiBase}/runs`, {
+            method: "POST",
+            headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+            min: this.min,
+            max: this.max,
+            count: this.count,
+            numbers: this.numbers
+            })
+        });
+
+        // 3️⃣ Refresh history
+        await this.loadHistory();
+
+        } catch (error) {
+        console.error("Error:", error);
         }
     },
 
-    methods: {
-        async getNumbers() {
-            this.error = null
+    async loadHistory() {
+        try {
+        const token = await this.getAccessToken();
 
-            if (this.min >= this.max) {
-                this.error = "Min must be less than Max.";
-                return;
+        const response = await fetch(`${this.apiBase}/runs`, {
+            headers: {
+            Authorization: `Bearer ${token}`
             }
-            if (this.count < 1 || this.count > 100) {
-                this.error = "Count must be between 1 and 100";
-                return;
-            }
+        });
 
-            this.loading = true;
+        if (!response.ok) return;
 
-            try {
-                const url = `${this.apiBase}/random` +
-                `?min=${encodeURIComponent(this.min)}` +
-                `&max=${encodeURIComponent(this.max)}` +
-                `&count=${encodeURIComponent(this.count)}`;
-                const res = await fetch(url);
+        const data = await response.json();
+        this.history = data.items || [];
 
-                if (!res.ok) throw new Error(`API request failed: ${res.status}`);
-
-                const data = await res.json()
-                this.numbers = data
-            } catch (err) {
-                console.error(err)
-                this.error = "Failed to fetch numbers (Check CORS or API status)."
-            } finally {
-                this.loading = false;
+            } catch (error) {
+        console.error("History load error:", error);
             }
         }
     }
 };
-</script>
-
-<script setup>
-import { ref, onMounted } from 'vue'
-
-const loggedIn = ref(false)
-
-onMounted(() => {
-    loggedIn.value =
-localStorage.getItem('bb_logged_in')
-=== 'true'
-})
 </script>

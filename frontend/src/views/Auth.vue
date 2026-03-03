@@ -1,30 +1,24 @@
 <template>
     <div>
-        <h1>Auth Callback</h1>
-        <p v-if="code">Login Successful!! Redirecting to dashboard...</p>
-        <p v-else>No code found</p>
+        <h1>Signing you in...</h1>
+        <p v-if="error" style="color: red">{{ error }}</p>
     </div>
 </template>
 
 <script>
+import { getCurrentUser } from "aws-amplify/auth"
+
 export default {
     data() {
-        return {
-            code: null
-        }
+        return { error: null }
     },
-    mounted() {
-        const params = new URLSearchParams(window.location.search)
-        this.code = params.get("code")
-
-        if (this.code) {
-            // marks user as logged in
-            localStorage.setItem("bb_logged_in", "true")
-
-            // redirect to dashboard after a short moment
-            setTimeout(() => {
-                this.$router.push("/dashboard")
-            }, 500)
+    async mounted() {
+        try {
+            await getCurrentUser()
+            this.$router.replace("/dashboard")
+        } catch (e) {
+            console.error(e)
+            this.error = "Sign-in failed. Try again"
         }
     }
 }

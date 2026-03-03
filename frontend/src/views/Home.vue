@@ -1,52 +1,92 @@
 <template>
-    <div>
-        <h1>BubbleBoard</h1>
-        <p>Welcome to BubbleBoard</p>
-        
-        <p>
-            <a :href="loginUrl">Log in</a>
-            |
-            <button @click="logout">Log out</button>
+<div>
+    <h1>Welcome to BubbleBoard</h1>
+
+    <p v-if="loading">Checking session...</p>
+
+    <div v-else>
+        <p v-if="userEmail">
+        You're signed in as <strong>{{ userEmail }}</strong>
         </p>
+        <p v-else>Not signed in</p>
+
+        <button v-if="!userEmail" @click="handleSignIn">Sign in</button>
+        <button v-else @click="handleSignOut">Sign out</button>
     </div>
+</div>
 </template>
 
 <script>
-export default {
-    data() {
-        return { //
-            domain: "https://us-west-282bustkgj.auth.us-west-2.amazoncognito.com",
-            clientId: "4p1vju94ejtl5aa5p2p9jkrte0",
-            loginRedirectUri: "https%3A%2F%2Fbubbleboard.click%2Fauth",
-            logoutRedirectUri: "https://bubbleboard.click/"
-        }
-    },
-    computed: {
-        loginUrl() {
-            return (
-                `${this.domain}/login` +
-                `?client_id=${this.clientId}` +
-                `&response_type=code` +
-                `&scope=email+openid+phone` +
-                `&redirect_uri=${this.loginRedirectUri}`
-            )
-        },
-        logoutUrl() {
-            return (
-                `${this.domain}/logout` +
-                `?client_id=${this.clientId}` +
-                `&logout_uri=${encodeURIComponent(this.logoutRedirectUri)}`
-            )
-        }
-    },
-    methods: {
-        logout() {
-            // clears the local session flag
-            localStorage.removeItem("bb_logged_in")
+import {
+signInWithRedirect,
+signOut,
+fetchAuthSession,
+} from "aws-amplify/auth";
 
-            // redirects to Cognito logout
-            window.location.href = this.logoutUrl
+export default {
+data() {
+    return {
+        userEmail: null,
+        loading: true,
+    };
+},
+
+async mounted() {
+    await this.refreshAuthState();
+},
+
+  // When you come back to "/" after login, refresh state
+watch: {
+    $route() {
+        this.refreshAuthState();
+    },
+},
+
+methods: {
+    async refreshAuthState() {
+        this.loading = true;
+        this.userEmail = null;
+
+        try {
+            const session = await fetchAuthSession();
+
+            const idToken = session.tokens?.idToken
+            if (!idToken) {
+                this.loading = false
+                return
+            }
+
+            // Pull email directly from the ID token payload
+            const payload = idToken.payload || {}
+            this.userEmail = payload.email || payload["cognito:username"] || "(signed in)"
+        } catch (e) {
+            console.log("refreshAuthState error:", e)
+            this.userEmail = null
+        } finally {
+            this.loading = false
         }
-    }
-}
+    },
+
+    async handleSignIn() {
+        try {
+        await signInWithRedirect();
+        } catch (e) {
+        // If already signed in, just refresh UI
+        if (String(e).includes("UserAlreadyAuthenticatedException")) {
+            await this.refreshAuthState();
+            return;
+        }
+        console.error(e);
+        }
+    },
+
+    async handleSignOut() {
+        await signOut({ global: true });
+        this.userEmail = null;
+
+      // Force a clean reload (helps a lot during dev)
+        window.location.href = "https://bubbleboard.click/";
+    },
+},
+};
 </script>
