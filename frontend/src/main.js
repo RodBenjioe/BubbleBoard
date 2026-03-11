@@ -1,9 +1,13 @@
-import { createApp } from 'vue'
-import App from './App.vue'
-import router from './router'
-import { Amplify } from "aws-amplify"
-import awsconfig from './amplifyconfiguration'
+import { createApp } from "vue";
+import App from "./App.vue";
+import router from "./router";
 
-Amplify.configure(awsconfig)
+import { Amplify } from "aws-amplify";
+import awsconfig from "./amplifyconfiguration";
+Amplify.configure(awsconfig);
 
-createApp(App).use(router).mount("#app")
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import "./style.css";
+
+createApp(App).use(router).mount("#app");

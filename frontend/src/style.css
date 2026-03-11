@@ -1,0 +1,110 @@
+body {
+    background-color: #0a2e36;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.app-shell {
+    background: linear-gradient(180deg, #0a2e36 0%, #036d19 100%);
+    min-height: 100vh;
+}
+
+.bubble-navbar {
+    background-color: #0a2e36;
+    border-bottom: 3px solid #27fb6b;
+}
+
+.bubble-card {
+    background-color: #0a2e36;
+    color: white;
+}
+
+.bubble-title {
+    color: #27fb6b;
+    font-weight: 700;
+}
+
+.bubble-alert-success {
+    background-color: #036d19;
+    color: white;
+    border: 1px solid #27fb6b;
+}
+
+.bubble-alert-secondary {
+    background-color: #14333a;
+    border: 1px solid #09a129;
+    color: white;
+}
+
+.bubble-btn-primary {
+    background-color: #27fb6b;
+    border-color: #27fb6b;
+    color: #0a2e36;
+    font-weight: 600;
+}
+
+.bubble-btn-primary:hover {
+    background-color: #14cc60;
+    border-color: #14cc60;
+    color: #0a2e36;
+}
+
+.bubble-btn-secondary {
+    background-color: #09a129;
+    border-color: #09a129;
+    color: white;
+    font-weight: 600;
+}
+
+.bubble-btn-secondary:hover {
+    background-color: #14cc60;
+    border-color: #14cc60;
+    color: #0a2e36;
+}
+
+.bubble-btn-outline {
+    border: 1px solid #27fb6b;
+    color: #27fb6b;
+    background: transparent;
+}
+
+.bubble-btn-outline:hover {
+    background-color: #27fb6b;
+    color: #0a2e36;
+}
+
+.bubble-input {
+    background-color: #14333a;
+    border: 1px solid #09a129;
+    color: white;
+}
+
+.bubble-input:focus {
+    background-color: #14333a;
+    color: white;
+    border-color: #27fb6b;
+    box-shadow: 0 0 0 0.2rem rgba(39, 251, 107, 0.25);
+}
+
+.bubble-input::placeholder {
+    color: #cfd8dc;
+}
+
+.bubble-stat {
+    background: #14333a;
+    border: 1px solid #09a129;
+    border-radius: 6px;
+    padding: 8px;
+}
+
+.bubble-stat small {
+    display: block;
+    color: #cfd8dc;
+}
+
+.bubble-spinner {
+    color: #27fb6b;
+}
+
+.bubble-numbers {
+    word-break: break-word;
+}

@@ -1,25 +1,27 @@
 <template>
-    <div>
-        <h1>Signing you in...</h1>
-        <p v-if="error" style="color: red">{{ error }}</p>
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow border-0 bubble-card text-center">
+                <div class="card-body p-5">
+                    <h2 class="bubble-title mb-3">Signing you in...</h2>
+
+                    <div class="spinner-border bubble-spinner mb-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+
+                    <p class="text-light mb-0">Redirecting to your dashboard</p>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script>
-import { getCurrentUser } from "aws-amplify/auth"
-
 export default {
-    data() {
-        return { error: null }
-    },
     async mounted() {
-        try {
-            await getCurrentUser()
-            this.$router.replace("/dashboard")
-        } catch (e) {
-            console.error(e)
-            this.error = "Sign-in failed. Try again"
-        }
-    }
-}
+        setTimeout(() => {
+            this.$router.push("/dashboard");
+        }, 1500);
+    },
+};
 </script>
